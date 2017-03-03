@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" ng-app='app'>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+    canvas {
+        width: 500px;
+        height: 250px;
+        border: 1px solid gray;
+    }
+    </style>
+</head>
+
+<body>
+    <div ng-controller='index2'>
+        example:
+        <br>
+    </div>
+    <div ng-controller='index1'>
+        <input type="text" ng-model='getColor' placeholder="please set color of line">
+        <input type="text" ng-model='time' placeholder="please set time">
+        <button ng-click='paint()'>Draw a picture</button>
+    </div>
+</body>
+<script src='angular.js'></script>
+<script type="text/javascript">
+var app = angular.module('app', []);
+
+app.controller('index1', ['$scope', 'draw', '$document', '$http', '$interval', function($scope, draw, $document, $http, $interval) {
+    // $scope.getColor='';
+    $scope.paint = function() {
+        var can = draw.drawPen('index1', {
+            color: $scope.getColor
+        });
+
+        var offset = 0;
+        $interval(function() {
+            $http.jsonp('ramdom.php', {
+                params: {
+                    callback: 'JSON_CALLBACK'
+                }
+            }).success(function(data) {
+                offset += 5
+                can.lineTo(offset, data);
+                can.stroke();
+            })
+        }, $scope.time)
+    }
+
+}]);
+
+app.controller('index2', ['$scope', 'draw', '$document', '$http', '$interval', function($scope, draw, $document, $http, $interval) {
+
+    var can = draw.drawPen('index2', {
+        color: 'green'
+    });
+    var offset = 0;
+    $interval(function() {
+        $http.jsonp('ramdom.php', {
+            params: {
+                callback: "JSON_CALLBACK"
+            }
+        }).success(function(data) {
+            console.log(data)
+            offset += 5
+            can.lineTo(offset, data);
+            can.stroke();
+        })
+    }, 1000)
+}]);
+
+app.service('draw', ['$document', function($document) {
+    return {
+        create: function(ctrl) {
+            var paper = $document[0].querySelector('[ng-controller=' + ctrl + ']')
+            var area = $document[0].createElement('canvas');
+            paper.appendChild(area);
+            area.id = ctrl + 'paper';
+            return area;
+        },
+
+        drawPen: function(ctrl, params) {
+            var canvas = this.create(ctrl);
+            var pens = canvas.getContext('2d');
+            pens.beginPath();
+            pens.moveTo(0, 0);
+            pens.strokeStyle = params.color;
+            return pens;
+
+        }
+    }
+}])
+</script>
+
+</html>
